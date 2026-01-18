@@ -16,8 +16,12 @@ def account_registration(request):
         
         serializer = UserSerializer(data=user_data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()  
-        return Response({"user": serializer.data}, status=status.HTTP_201_CREATED)
+        user = serializer.save()
+        # Return JWT token per RealWorld API spec
+        jwt_token = RefreshToken.for_user(user)
+        serializer_data = serializer.data
+        serializer_data['token'] = str(jwt_token.access_token)
+        return Response({"user": serializer_data}, status=status.HTTP_201_CREATED)
     
     except Exception:
         return Response(status=status.HTTP_400_BAD_REQUEST)
